@@ -8,7 +8,7 @@ Desarrollar, evaluar y comparar modelos de Machine Learning (supervisados y no s
 
 ## 3. Definición de KPIs
 * **Tasa de Churn Global:** Línea base actual de cancelaciones para dimensionar el problema.
-* **Recall (Clase 1):** Métrica técnica principal para minimizar los falsos negativos.
+* **Recall (Clase 1):** Métrica técnica principal para minimizar los falsos negativos (clientes que se van sin ser detectados por el modelo).
 * **F1-Score:** Para evaluar el balance general de las predicciones dadas las clases desbalanceadas.
 
 ## 4. Fuentes de datos utilizadas
@@ -17,17 +17,17 @@ Conjunto de datos estructurado *Telco Customer Churn*, compuesto por 7.043 regis
 ## 5. Metodología utilizada (CRISP-DM)
 Se aplicó el estándar de la industria CRISP-DM, abarcando las fases de comprensión del negocio, comprensión y preparación de datos, modelamiento, evaluación de desempeño y análisis de impacto ético.
 
-## 6. Preparación y análisis exploratorio de los datos (EDA)
-* **Limpieza:** Se eliminó la variable identificadora `customerID`, se transformó `TotalCharges` a formato numérico y se imputaron los valores nulos con 0.
-* **Transformación:** Se binarizó la variable objetivo y se aplicó *One-Hot Encoding* a las variables categóricas.
-* **Hallazgos EDA:** Los contratos mensuales (*Month-to-month*) y el método de pago por cheque electrónico presentan las mayores concentraciones de abandono.
+## 6. Preparación e Ingeniería de Características
+* **Limpieza:** Se eliminó la variable `customerID`, se transformó `TotalCharges` a numérico y se imputaron nulos con 0.
+* **Transformación:** Binarización de la variable objetivo, aplicación de *One-Hot Encoding* a variables categóricas y escalado de variables numéricas mediante `StandardScaler`.
+* **Feature Engineering:** Se inyectó la etiqueta de segmento de cliente (generada por K-Means) como una nueva variable predictiva para enriquecer los modelos supervisados.
 
 ## 7. Implementación de Modelos
-* **Supervisados (Clasificación):** Se entrenaron y compararon algoritmos de Regresión Logística y Random Forest.
-* **No Supervisado (Agrupación):** Se implementó K-Means (k=3) sobre las variables `tenure` (antigüedad) y `MonthlyCharges` (cargo mensual) para segmentar a los clientes en grupos de valor y riesgo.
+* **No Supervisado (K-Means):** Segmentación en 3 clústeres utilizando `tenure` y `MonthlyCharges` (Perfiles: Valor Básico, Alto Riesgo y Premium/Leales).
+* **Supervisados (Clasificación):** Entrenamiento y comparación directa entre Regresión Logística y Random Forest.
 
 ## 8. Evaluación de Resultados
-La Regresión Logística superó al Random Forest en la métrica clave de *Recall* para la clase positiva, demostrando mayor eficacia para detectar efectivamente a los clientes en riesgo de fuga.
+La Regresión Logística fue seleccionada como el modelo definitivo al lograr un *Recall* del 56% para la clase positiva, superando el 48% alcanzado por el Random Forest. El algoritmo lineal demostró mayor capacidad para minimizar los falsos negativos tras la estandarización de datos y el enriquecimiento del dataset con los clústeres.
 
 ## 9. Impacto Ético y Privacidad
-Los datos fueron anonimizados eliminando identificadores personales. Se asume un riesgo de falsos positivos, lo cual representa un costo de marketing aceptable. El modelo debe auditarse periódicamente para evitar sesgos discriminatorios basados en edad (`SeniorCitizen`) o género.
+Los datos fueron anonimizados eliminando identificadores personales. Se asume un riesgo de falsos positivos (ofrecer descuentos a clientes que no se iban a ir), lo cual representa un costo de marketing aceptable. El modelo debe auditarse periódicamente para evitar sesgos discriminatorios.
