@@ -1,36 +1,32 @@
 import joblib
 import pandas as pd
-from data_prep import load_data, clean_data, preprocess_data
+from sklearn.preprocessing import StandardScaler
 
-def generar_predicciones(data_path, model_path):
-    
-    modelo = joblib.load(model_path)
+def main():
+    print("Iniciando motor de predicción...")
 
-    df_raw = load_data(data_path)
-    df_clean = clean_data(df_raw.copy())
-    df_processed = preprocess_data(df_clean)
+    df_processed = pd.read_csv('data/processed/Telco_Customer_Churn_Processed.csv')
+    df_raw = pd.read_csv('data/raw/Telco_Customer_Churn_Dataset.csv')
 
-    if 'Churn' in df_processed.columns:
-        X_new = df_processed.drop(columns=['Churn'])
-    else:
-        X_new = df_processed
+    X_full = df_processed.drop(columns=['Churn'])
+    muestra_original = df_raw.head(5)[['gender', 'tenure', 'Contract']]
 
-    predicciones = modelo.predict(X_new)
-    probabilidades = modelo.predict_proba(X_new)[:, 1] 
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X_full)
+    X_muestra = X_scaled[:5]
 
-    df_raw['Prediccion_Churn'] = predicciones
-    df_raw['Probabilidad_Fuga (%)'] = (probabilidades * 100).round(2)
+    # Cargar el modelo ganador (Regresión Logística)
+    modelo_lr = joblib.load('models/modelo_churn_lr.pkl')
 
-    return df_raw
+    predicciones = modelo_lr.predict(X_muestra)
+    probabilidades = modelo_lr.predict_proba(X_muestra)[:, 1] * 100
+
+    resultados = muestra_original.copy()
+    resultados['Prediccion_Churn'] = predicciones
+    resultados['Probabilidad_Fuga (%)'] = probabilidades.round(2)
+
+    print("\nPredicciones generadas con éxito. Muestra de los primeros 5 clientes:")
+    print(resultados)
 
 if __name__ == "__main__":
-    print("Iniciando motor de predicción...")
-    
-    archivo_datos = 'data/raw/Telco_Customer_Churn_Dataset.csv'
-    archivo_modelo = 'models/modelo_churn_lr.pkl'
-    
-    resultados = generar_predicciones(archivo_datos, archivo_modelo)
-    
-    print("\nPredicciones generadas con éxito. Muestra de los primeros 5 clientes:")
-    columnas_vista = ['gender', 'tenure', 'Contract', 'Prediccion_Churn', 'Probabilidad_Fuga (%)']
-    print(resultados[columnas_vista].head())
+    main()
